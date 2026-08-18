@@ -13,9 +13,18 @@ from schemas.user import (
     ResetPasswordRequest,
 )
 
-from schemas.auth import RefreshTokenRequest, SocialLoginRequest
+from schemas.auth import (
+    RefreshTokenRequest,
+    SocialLoginRequest,
+)
 
-from service import user_service as svc
+from services import (
+    user_service,
+    auth_service,
+    otp_service,
+    password_service,
+    social_auth_service,
+)
 
 
 router = APIRouter(
@@ -35,7 +44,7 @@ def signup(
     data: UserCreate,
     db: Session = Depends(get_db),
 ):
-    return svc.create_user(
+    return user_service.create_user(
         db=db,
         first_name=data.first_name,
         last_name=data.last_name,
@@ -56,7 +65,7 @@ def login(
     data: UserLogin,
     db: Session = Depends(get_db),
 ):
-    return svc.login_user(
+    return auth_service.login_user(
         db,
         data.email,
         data.password,
@@ -79,7 +88,7 @@ def forgot_password(
     data: ForgotPasswordRequest,
     db: Session = Depends(get_db),
 ):
-    return svc.request_otp(
+    return otp_service.request_otp(
         db,
         data.email,
     )
@@ -91,7 +100,7 @@ def forgot_password(
 def verify_otp(
     data: VerifyOTPRequest,
 ):
-    reset_token = svc.verify_otp(
+    reset_token = otp_service.verify_otp(
         data.email,
         data.otp,
     )
@@ -109,7 +118,7 @@ def reset_password(
     data: ResetPasswordRequest,
     db: Session = Depends(get_db),
 ):
-    svc.reset_password(
+    password_service.reset_password(
         db,
         data.reset_token,
         data.new_password,
@@ -126,7 +135,7 @@ def reset_password(
 def refresh_token(
     data: RefreshTokenRequest,
 ):
-    access_token = svc.refresh_access_token(
+    access_token = auth_service.refresh_access_token(
         data.refresh_token
     )
 
@@ -136,6 +145,8 @@ def refresh_token(
     }
 
 
+# ── Google Login ──────────────────────────────────────────────────────────────
+
 @router.post(
     "/google",
     response_model=TokenOut,
@@ -144,7 +155,7 @@ def google_login(
     data: SocialLoginRequest,
     db: Session = Depends(get_db),
 ):
-    return svc.google_login(
+    return social_auth_service.google_login(
         db,
         data.token,
     )
