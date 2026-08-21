@@ -34,14 +34,13 @@ def update_user(db: Session, user_id: int, data: UserUpdate) -> User:
 
 # ── Sign Up & Account Management ──────────────────────────────────────────────
 
-def create_user(db: Session, first_name: str, last_name: str, email: str, password: str, phone: str, gender: str) -> User:
+def create_user(db: Session, full_name: str, email: str, password: str, phone: str, gender: str) -> User:
     existing_user = get_user_by_email(db, email)
     if existing_user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     user = User(
-        first_name=first_name,
-        last_name=last_name,
+        full_name=full_name,
         email=email,
         password=hash_password(password),
         phone=phone,
@@ -56,7 +55,7 @@ def create_user(db: Session, first_name: str, last_name: str, email: str, passwo
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     db.refresh(user)
-    send_welcome_email(user.email, user.first_name, user.last_name)
+    send_welcome_email(user.email, user.first_name, user.full_name)
     return user
 
 

@@ -4,12 +4,11 @@ from typing import Optional, Literal
 
 # ── User ──────────────────────────────────────────────────────────────────────
 class UserCreate(BaseModel):
-    first_name: str
-    last_name: str
+    full_name: str
     email: EmailStr
-    password: str
-    phone: str
-    gender: Literal["male", "female"]
+    password: Optional[str] = None
+    phone: Optional[str] = None
+    gender: Optional[Literal["male", "female"]] = None
 
 class UserLogin(BaseModel):
     email:    EmailStr
@@ -18,8 +17,7 @@ class UserLogin(BaseModel):
 
 class UserOut(BaseModel):
     user_id: int
-    first_name: str
-    last_name: str
+    full_name: str
     email: EmailStr
     phone: str
     gender: Literal["male", "female"]
@@ -27,8 +25,7 @@ class UserOut(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    full_name: Optional[str] = None
     phone: Optional[str] = None
 
 

@@ -16,9 +16,9 @@ class Doctor(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     category_id  = Column(Integer, ForeignKey("categories.category_id"), nullable=False)
+
     availability = relationship("DoctorAvailability", back_populates="doctor")
-
-
     reviews = relationship("DoctorReview", back_populates="doctor")
     category = relationship("Category", back_populates="doctors")
     favorites = relationship("DoctorFavorite", back_populates="doctor")
+    appointments = relationship("Appointment", back_populates="doctor")

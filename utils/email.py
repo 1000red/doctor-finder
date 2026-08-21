@@ -29,9 +29,8 @@ def _send_email(to_email: str, subject: str, html_body: str) -> bool:
         return False
 
 
-def send_otp_email(to_email: str, otp: str, first_name: str, last_name: str) -> bool:
+def send_otp_email(to_email: str, otp: str, full_name: str) -> bool:
     """Send OTP email for password reset."""
-    full_name = escape(f"{first_name} {last_name}")
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; background: #ffffff;">
@@ -58,9 +57,8 @@ def send_otp_email(to_email: str, otp: str, first_name: str, last_name: str) -> 
     return _send_email(to_email=to_email, subject="Doctor Finder – Your Password Reset Code", html_body=html_body)
 
 
-def send_welcome_email(to_email: str, first_name: str, last_name: str) -> bool:
+def send_welcome_email(to_email: str, full_name: str) -> bool:
     """Send welcome email after successful account registration."""
-    full_name = escape(f"{first_name} {last_name}")
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; background: #ffffff;">
@@ -90,9 +88,8 @@ def send_welcome_email(to_email: str, first_name: str, last_name: str) -> bool:
     return _send_email(to_email=to_email, subject="Welcome to Doctor Finder", html_body=html_body)
 
 
-def send_password_changed_email(to_email: str, first_name: str, last_name: str) -> bool:
+def send_password_changed_email(to_email: str, full_name: str) -> bool:
     """Notify the user after successfully changing their password."""
-    full_name = escape(f"{first_name} {last_name}")
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; background: #ffffff;">

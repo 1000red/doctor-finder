@@ -13,7 +13,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/signup", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def signup(data: UserCreate, db: Session = Depends(get_db)):
-    return user_service.create_user(db=db, first_name=data.first_name, last_name=data.last_name, email=data.email, password=data.password, phone=data.phone, gender=data.gender)
+    return user_service.create_user(db=db, full_name=data.full_name, email=data.email, password=data.password, phone=data.phone, gender=data.gender)
 
 
 # ── Login ─────────────────────────────────────────────────────────────────────

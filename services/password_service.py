@@ -13,7 +13,7 @@ def change_password(db: Session, user_id: int, old_password: str, new_password: 
 
     user.password = hash_password(new_password)
     db.commit()
-    send_password_changed_email(user.email, user.first_name, user.last_name)
+    send_password_changed_email(user.email, user.full_name)
 
 
 def reset_password(db: Session, reset_token: str, new_password: str) -> None:

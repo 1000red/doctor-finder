@@ -8,8 +8,8 @@ from db.database import engine
 from db.base import Base
 
 # Import all models so SQLAlchemy registers them before create_all
-from models import user, docrot, doctor_availability, doctor_favorite, doctor_review, category  # noqa: F401, E402
-from routers import auth, users
+from models import appointment, user, docrot, doctor_availability, doctor_favorite, doctor_review, category  # noqa: F401, E402
+from routers import appointments, auth, users
 
 
 @asynccontextmanager
@@ -44,6 +44,7 @@ app.add_middleware(
 # Routers
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(appointments.router)
 
 
 # Health Check Routes
