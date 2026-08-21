@@ -21,6 +21,9 @@ def update_me(data: UserUpdate, user_id: int = Depends(get_current_user_id), db:
 
 @router.put("/me/password")
 def change_password_route(data: ChangePasswordRequest, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    print("USER ID:", user_id)
+    print("OLD PASSWORD:", data.old_password)
+
     change_password(db, user_id, data.old_password, data.new_password)
     return {"message": "Password changed successfully"}
 

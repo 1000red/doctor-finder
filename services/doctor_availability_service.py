@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from models.doctor_availability import DoctorAvailability
-from services.doctor import get_doctor_by_id
+from services.doctor_service import get_doctor_by_id
 
 
 def get_availability_by_id(db: Session, availability_id: int) -> DoctorAvailability:

@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from models.docrot import Doctor
-from services.category import get_category_by_id
+from services.category_service import get_category_by_id
 
 
 def get_doctor_by_id(db: Session, doctor_id: int) -> Doctor:

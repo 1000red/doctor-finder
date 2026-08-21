@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from models.doctor_favorite import DoctorFavorite
-from services.doctor import get_doctor_by_id
+from services.doctor_service import get_doctor_by_id
 
 
 def add_favorite(db: Session, user_id: int, doctor_id: int) -> DoctorFavorite:

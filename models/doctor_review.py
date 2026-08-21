@@ -17,4 +17,4 @@ class DoctorReview(Base):
     )
 
     user = relationship("User", back_populates="doctor_reviews")
-    # doctor = relationship("Doctor", back_populates="reviews")
+    doctor = relationship("Doctor", back_populates="reviews")

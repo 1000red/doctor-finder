@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from core.security import get_current_user_id
 from db.database import get_db
 from schemas.appointment import AppointmentCreate, AppointmentOut
-from services.appointment import create_appointment
+from services.appointment_service import create_appointment
 
 
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
