@@ -12,8 +12,8 @@ class AppointmentCreate(BaseModel):
 
 class AppointmentOut(BaseModel):
     appointment_id: int
-    user_id: int
     doctor_id: int
+    doctor_name: str
     appointment_date: date
     start_time: str
     end_time: str

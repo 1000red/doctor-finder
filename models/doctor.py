@@ -13,6 +13,7 @@ class Doctor(Base):
     experience = Column(Integer, nullable=True)
     treated = Column(Integer, default=0, nullable=False)
     price = Column(Float, nullable=False)
+    average_rating = Column(Float, nullable=False, default=0.0)
     is_active = Column(Boolean, default=True, nullable=False)
 
     category_id  = Column(Integer, ForeignKey("categories.category_id"), nullable=False)

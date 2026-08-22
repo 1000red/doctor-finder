@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from models.docrot import Doctor
+from models.doctor import Doctor
 from services.category_service import get_category_by_id
 
 

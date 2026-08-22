@@ -10,6 +10,7 @@ class DoctorOut(BaseModel):
     experience: Optional[int] = None
     treated: int
     price: float
+    average_rating: float
     is_active: bool
     category_id: int
 

@@ -1,12 +1,11 @@
+from datetime import date as date_type
 from pydantic import BaseModel
-from typing import Optional
+
 
 class DoctorAvailabilityOut(BaseModel):
     availability_id: int
     doctor_id: int
-    day_of_week: int
-    month: int
-    year: int
+    date: date_type
     start_time: str
     end_time: str
     is_available: bool

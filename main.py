@@ -2,24 +2,20 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+from fastapi.staticfiles import StaticFiles
+import os
 
 from core.config import settings
-from db.database import engine
-from db.base import Base
+# from db.database import engine
+# from db.base import Base
 
 # Import all models so SQLAlchemy registers them before create_all
-from models import appointment, user, docrot, doctor_availability, doctor_favorite, doctor_review, category  # noqa: F401, E402
-from routers import appointments, auth, users
+from models import appointment, doctor, user, doctor_availability, doctor_favorite, doctor_review, category  # noqa: F401, E402
+from routers import appointments, auth, users, category, doctor, doctor_availability, doctor_review
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Database initialization
-    try:
-        Base.metadata.create_all(bind=engine)
-        print("Database tables created successfully.")
-    except Exception as e:
-        print(f"Failed to create database tables: {e}")
     yield
 
 
@@ -41,11 +37,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Static files
+os.makedirs("image/category", exist_ok=True)
+os.makedirs("image/doctor", exist_ok=True)
+
+app.mount(
+    "/image",
+    StaticFiles(directory="image"),
+    name="image"
+)
+app.mount(
+    "/image",
+    StaticFiles(directory="image"),
+    name="image"
+)
+
 # Routers
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(appointments.router)
-
+app.include_router(category.router)
+app.include_router(doctor_review.router)
+app.include_router(doctor_availability.router)
+app.include_router(doctor.router)
 
 # Health Check Routes
 @app.get("/", tags=["Health"])

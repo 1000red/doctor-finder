@@ -30,7 +30,7 @@ def request_otp(db: Session, email: str) -> dict:
         "user_id": user.user_id,
     }
 
-    sent = send_otp_email(email, otp, user.flull_name)
+    sent = send_otp_email(email, otp, user.full_name)
 
     if not sent:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to send OTP email")

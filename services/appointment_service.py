@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from models.doctor import Doctor
 from models.appointment import Appointment
 from models.doctor_availability import DoctorAvailability
 from schemas.appointment import AppointmentCreate
@@ -21,9 +22,7 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
         db.query(DoctorAvailability)
         .filter(
             DoctorAvailability.doctor_id == data.doctor_id,
-            DoctorAvailability.day_of_week == data.appointment_date.day,
-            DoctorAvailability.month == data.appointment_date.month,
-            DoctorAvailability.year == data.appointment_date.year,
+            DoctorAvailability.date == data.appointment_date,
             DoctorAvailability.start_time == data.start_time,
             DoctorAvailability.end_time == data.end_time,
             DoctorAvailability.is_available == True,
@@ -79,3 +78,43 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
     db.commit()
     db.refresh(appointment)
     return appointment
+
+
+def get_user_appointments(db: Session, user_id: int) -> list[dict]:
+    results = (
+        db.query(Appointment, Doctor.name.label("doctor_name"))
+        .join(Doctor, Appointment.doctor_id == Doctor.doctor_id)
+        .filter(Appointment.user_id == user_id)
+        .order_by(Appointment.appointment_date, Appointment.start_time)
+        .all()
+    )
+
+    return [
+        {
+            "appointment_id": appointment.appointment_id,
+            "doctor_id": appointment.doctor_id,
+            "doctor_name": doctor_name,
+            "appointment_date": appointment.appointment_date,
+            "start_time": appointment.start_time,
+            "end_time": appointment.end_time,
+            "created_at": appointment.created_at,
+        }
+        for appointment, doctor_name in results
+    ]
+
+
+def cancel_appointment(db: Session, user_id: int, appointment_id: int) -> None:
+    appointment = (
+        db.query(Appointment)
+        .filter(
+            Appointment.appointment_id == appointment_id,
+            Appointment.user_id == user_id,
+        )
+        .first()
+    )
+
+    if not appointment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found")
+
+    db.delete(appointment)
+    db.commit()
