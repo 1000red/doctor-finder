@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from db.database import get_db
 from core.security import get_current_user_id
 from schemas.user import UserOut, UserUpdate, ChangePasswordRequest, DeleteAccountRequest
-from services import get_user_by_id, update_user, change_password, delete_account
+from services.user_service import get_user_by_id, update_user, delete_account
+from services.password_service import change_password
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
