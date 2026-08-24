@@ -19,3 +19,11 @@ def get_doctors(db: Session) -> list[Doctor]:
 def get_doctors_by_category(db: Session, category_id: int) -> list[Doctor]:
     get_category_by_id(db, category_id)
     return db.query(Doctor).filter(Doctor.category_id == category_id, Doctor.is_active == True).all()
+
+
+def search_doctors(db: Session, query: str) -> list[Doctor]:
+    q = query.strip()
+    if not q:
+        return []
+
+    return db.query(Doctor).filter(Doctor.name.ilike(f"{q}%"), Doctor.is_active == True).limit(20).all()
