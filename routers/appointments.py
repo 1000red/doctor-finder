@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from core.security import get_current_user_id
 from db.database import get_db
-from schemas.appointment import AppointmentCreate, AppointmentOut, AppointmentOut
+from schemas.appointment import AppointmentCreate, AppointmentOut, UserAppointmentOut
 from services.appointment_service import create_appointment, get_user_appointments, cancel_appointment
 
 
@@ -23,7 +23,7 @@ def book_appointment(
     return create_appointment(db=db, user_id=user_id, data=data)
 
 
-@router.get("/me", response_model=list[AppointmentOut])
+@router.get("/me", response_model=list[UserAppointmentOut])
 def my_appointments(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),

@@ -18,6 +18,9 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
 
     get_doctor_by_id(db, data.doctor_id)
 
+    slot_key = f"appointment:{data.doctor_id}:{data.appointment_date.isoformat()}:{data.start_time}:{data.end_time}"
+    db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:slot_key, 0))"), {"slot_key": slot_key})
+
     availability = (
         db.query(DoctorAvailability)
         .filter(
@@ -32,9 +35,6 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
 
     if not availability:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This time slot is not available")
-
-    slot_key = f"appointment:{data.doctor_id}:{data.appointment_date.isoformat()}:{data.start_time}:{data.end_time}"
-    db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:slot_key, 0))"), {"slot_key": slot_key})
 
     existing_appointment = (
         db.query(Appointment)
@@ -75,6 +75,12 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
     )
 
     db.add(appointment)
+
+    # If this booking fills the slot, mark it unavailable so it stops
+    # showing up in "available slots" listings elsewhere in the app.
+    if booked_count + 1 >= MAX_USERS_PER_SLOT:
+        availability.is_available = False
+
     db.commit()
     db.refresh(appointment)
     return appointment
@@ -117,4 +123,19 @@ def cancel_appointment(db: Session, user_id: int, appointment_id: int) -> None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found")
 
     db.delete(appointment)
+
+    # Re-open the slot since a spot just freed up.
+    availability = (
+        db.query(DoctorAvailability)
+        .filter(
+            DoctorAvailability.doctor_id == appointment.doctor_id,
+            DoctorAvailability.date == appointment.appointment_date,
+            DoctorAvailability.start_time == appointment.start_time,
+            DoctorAvailability.end_time == appointment.end_time,
+        )
+        .first()
+    )
+    if availability and not availability.is_available:
+        availability.is_available = True
+
     db.commit()
