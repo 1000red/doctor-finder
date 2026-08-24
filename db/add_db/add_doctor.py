@@ -12,14 +12,15 @@ from models.doctor import Doctor
 DOCTORS_PER_CATEGORY = 20
 
 # doctor_6.png is a female doctor's photo — reserve it for female names only
-FEMALE_IMAGE = "doctor/doctor_6.png"
+FEMALE_IMAGE = "image/doctor/doctor_6.png"
+
 MALE_IMAGES = [
-    "doctor/doctor_1.png",
-    "doctor/doctor_2.png",
-    "doctor/doctor_3.png",
-    "doctor/doctor_4.png",
-    "doctor/doctor_5.png",
-    "doctor/doctor_7.png",
+    "image/doctor/doctor_1.png",
+    "image/doctor/doctor_2.png",
+    "image/doctor/doctor_3.png",
+    "image/doctor/doctor_4.png",
+    "image/doctor/doctor_5.png",
+    "image/doctor/doctor_7.png",
 ]
 
 MALE_NAMES = [
@@ -67,37 +68,42 @@ WORK_PLACES = [
 
 
 def build_doctor_name(base_name: str, category_name: str) -> str:
-    return f"DR. {base_name} - Consultant {category_name}"
+    return f"{base_name}, {category_name}"
 
 
 def get_random_doctor(used_names: set) -> tuple[str, str]:
-    """Returns (name, image_path), avoiding name repetition."""
+    """Return (name, image_path), avoiding name repetition."""
     is_female = random.random() < 0.2
 
     names_pool = FEMALE_NAMES if is_female else MALE_NAMES
     image = FEMALE_IMAGE if is_female else random.choice(MALE_IMAGES)
 
-    available = [n for n in names_pool if n not in used_names]
+    available = [name for name in names_pool if name not in used_names]
+
     if not available:
-        available = names_pool  # اسمح بالتكرار لو خلصت الأسامي
+        available = names_pool
 
     name = random.choice(available)
     used_names.add(name)
+
     return name, image
 
 
 def seed_doctors():
     db = SessionLocal()
+
     try:
         categories = db.query(Category).all()
+
         if not categories:
-            print(f"Added {DOCTORS_PER_CATEGORY} doctors for category: {category.name}")
+            print("No categories found. Nothing to seed.")
             return
 
         total_added = 0
 
         for category in categories:
             used_names = set()
+
             for _ in range(DOCTORS_PER_CATEGORY):
                 base_name, image = get_random_doctor(used_names)
 
@@ -107,23 +113,33 @@ def seed_doctors():
                     work_place=random.choice(WORK_PLACES),
                     experience=random.randint(2, 25),
                     treated=random.randint(20, 2000),
-                    price=float(random.choice([100, 150, 200, 250, 300, 350, 400, 500])),
+                    price=float(
+                        random.choice(
+                            [100, 150, 200, 250, 300, 350, 400, 500]
+                        )
+                    ),
                     average_rating=0.0,
                     is_active=True,
                     category_id=category.category_id,
                 )
+
                 db.add(doctor)
                 total_added += 1
 
-            print(f"Added {DOCTORS_PER_CATEGORY} doctors for category: {category.name}")
+            print(
+                f"Added {DOCTORS_PER_CATEGORY} doctors "
+                f"for category: {category.name}"
+            )
 
         db.commit()
+
         print(f"\nDone. Total doctors added: {total_added}")
 
     except Exception as e:
         db.rollback()
         print(f"Error while seeding doctors: {e}")
         raise
+
     finally:
         db.close()
 
