@@ -31,7 +31,7 @@ def get_all_doctors(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/search", response_model=list[DoctorOut])
-def search_doctors(query: str, request: Request, db: Session = Depends(get_db)):
+def search_doctors_endpoint(query: str, request: Request, db: Session = Depends(get_db)):
     base_url = str(request.base_url).rstrip("/")
     return [_build_doctor_out(d, base_url) for d in search_doctors(db, query)]
 
