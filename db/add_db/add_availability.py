@@ -1,28 +1,31 @@
 """
-Seed script to populate doctor_availability with time slots from each
-doctor's recurring weekly working-hours schedule.
+Seed script to populate doctor_availability with time slots
+for each doctor over the next N days.
 
 Safe to re-run: skips (doctor_id, date, start_time, end_time)
 combinations that already exist.
 
-Run with: python3 -m db.add_db.add_appointment
+Run with: python -m db.add_db.add_availability
 """
 
+import random
 from datetime import date, datetime, timedelta
 
 from db.database import SessionLocal
 from models.doctor import Doctor
 from models.doctor_availability import DoctorAvailability
-from models.doctor_working_hours import DoctorWorkingHours
 
 DAYS_AHEAD = 14
 SLOT_DURATION_MINUTES = 30
+WORK_START_HOUR = 9
+WORK_END_HOUR = 17
+CHANCE_DAY_OFF = 0.15  # احتمال إن اليوم يبقى إجازة للدكتور
 
 
-def generate_time_slots(start_time: str, end_time: str) -> list[tuple[str, str]]:
+def generate_time_slots() -> list[tuple[str, str]]:
     slots = []
-    current = datetime.strptime(start_time, "%H:%M")
-    end_of_day = datetime.strptime(end_time, "%H:%M")
+    current = datetime.combine(date.today(), datetime.min.time()).replace(hour=WORK_START_HOUR)
+    end_of_day = current.replace(hour=WORK_END_HOUR)
 
     while current < end_of_day:
         slot_end = current + timedelta(minutes=SLOT_DURATION_MINUTES)
@@ -40,32 +43,17 @@ def seed_availability():
             print("No doctors found in the database. Please seed doctors first.")
             return
 
+        time_slots = generate_time_slots()
         today = date.today()
         total_added = 0
         total_skipped = 0
 
         for doctor in doctors:
-            working_hours_by_day = {
-                hours.day_of_week: hours
-                for hours in db.query(DoctorWorkingHours)
-                .filter(DoctorWorkingHours.doctor_id == doctor.doctor_id)
-                .all()
-            }
-
-            if not working_hours_by_day:
-                print(f"Doctor {doctor.doctor_id} ({doctor.name}): no working hours configured, skipped")
-                continue
-
             for day_offset in range(DAYS_AHEAD):
                 current_date = today + timedelta(days=day_offset)
-                working_hours = working_hours_by_day.get(current_date.weekday())
-                if not working_hours:
-                    continue
 
-                time_slots = generate_time_slots(
-                    working_hours.start_time,
-                    working_hours.end_time,
-                )
+                if random.random() < CHANCE_DAY_OFF:
+                    continue  # يوم إجازة للدكتور
 
                 existing_slots = {
                     (a.start_time, a.end_time)

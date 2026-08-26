@@ -21,9 +21,25 @@ def get_doctors_by_category(db: Session, category_id: int) -> list[Doctor]:
     return db.query(Doctor).filter(Doctor.category_id == category_id, Doctor.is_active == True).all()
 
 
+# def search_doctors(db: Session, query: str) -> list[Doctor]:
+#     q = query.strip()
+#     if not q:
+#         return []
+
+#     return db.query(Doctor).filter(Doctor.name.ilike(f"{q}%"), Doctor.is_active == True).limit(20).all()
+
+
 def search_doctors(db: Session, query: str) -> list[Doctor]:
     q = query.strip()
     if not q:
         return []
 
-    return db.query(Doctor).filter(Doctor.name.ilike(f"{q}%"), Doctor.is_active == True).limit(20).all()
+    return (
+        db.query(Doctor)
+        .filter(
+            Doctor.full_name.ilike(f"%{q}%"),
+            Doctor.is_active == True
+        )
+        .limit(20)
+        .all()
+    )

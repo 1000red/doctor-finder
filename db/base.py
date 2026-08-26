@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 # Import all models here so Alembic / create_all() can discover them
-from models import appointment, doctor, user, doctor_availability, doctor_favorite, doctor_review, category  # noqa: F401, E402
+from models import appointment, doctor, user, doctor_availability, doctor_favorite, doctor_review, doctor_working_hours, category  # noqa: F401, E402
 
 # Order is important => user must be imported before chat and content due to foreign key dependencies
 # F401, E402 (Quality Assurance) => F401 (Unused Import) and E402 (Module Level Import Not at Top of File) are ignored to allow for the necessary imports without triggering linter warnings.

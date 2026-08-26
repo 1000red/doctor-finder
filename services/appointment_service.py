@@ -14,12 +14,26 @@ MAX_USERS_PER_SLOT = 3
 
 def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Appointment:
     if data.appointment_date < datetime.now(timezone.utc).date():
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Appointments cannot be booked in the past")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Appointments cannot be booked in the past",
+        )
 
     get_doctor_by_id(db, data.doctor_id)
 
-    slot_key = f"appointment:{data.doctor_id}:{data.appointment_date.isoformat()}:{data.start_time}:{data.end_time}"
-    db.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:slot_key, 0))"), {"slot_key": slot_key})
+    slot_key = (
+        f"appointment:{data.doctor_id}:"
+        f"{data.appointment_date.isoformat()}:"
+        f"{data.start_time}:{data.end_time}"
+    )
+
+    db.execute(
+        text(
+            "SELECT pg_advisory_xact_lock("
+            "hashtextextended(:slot_key, 0))"
+        ),
+        {"slot_key": slot_key},
+    )
 
     availability = (
         db.query(DoctorAvailability)
@@ -34,23 +48,29 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
     )
 
     if not availability:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="This time slot is not available")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This time slot is not available",
+        )
 
+    # One appointment per user, per doctor, per day
     existing_appointment = (
         db.query(Appointment)
         .filter(
             Appointment.user_id == user_id,
             Appointment.doctor_id == data.doctor_id,
             Appointment.appointment_date == data.appointment_date,
-            Appointment.start_time == data.start_time,
-            Appointment.end_time == data.end_time,
         )
         .first()
     )
 
     if existing_appointment:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You have already booked this appointment")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You already have an appointment with this doctor on this day",
+        )
 
+    # Maximum 3 users per slot
     booked_count = (
         db.query(Appointment)
         .filter(
@@ -63,7 +83,10 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
     )
 
     if booked_count >= MAX_USERS_PER_SLOT:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This appointment is fully booked")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This appointment is fully booked",
+        )
 
     appointment = Appointment(
         user_id=user_id,
@@ -76,13 +99,13 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
 
     db.add(appointment)
 
-    # If this booking fills the slot, mark it unavailable so it stops
-    # showing up in "available slots" listings elsewhere in the app.
+    # If this booking fills the slot, mark it unavailable
     if booked_count + 1 >= MAX_USERS_PER_SLOT:
         availability.is_available = False
 
     db.commit()
     db.refresh(appointment)
+
     return appointment
 
 
