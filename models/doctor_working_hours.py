@@ -5,13 +5,6 @@ from db.base import Base
 
 
 class DoctorWorkingHours(Base):
-    """The recurring weekly schedule a doctor works.
-
-    ``day_of_week`` uses Python's weekday convention: Monday is 0 and Sunday is 6.
-    Availability slots are generated from these ranges; they are not a replacement
-    for this schedule.
-    """
-
     __tablename__ = "doctor_working_hours"
     __table_args__ = (
         CheckConstraint("day_of_week >= 0 AND day_of_week <= 6", name="ck_doctor_working_hours_day"),
