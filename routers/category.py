@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from db.database import get_db
 from schemas.category import CategoryOut
-from services.category_service import get_categories, get_category_by_id
+from services.category_service import get_categories
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
@@ -27,21 +27,3 @@ def get_all_categories(
             )
         )
     return result
-
-
-@router.get("/{category_id}", response_model=CategoryOut)
-def get_category(
-    category_id: int,
-    request: Request,
-    db: Session = Depends(get_db),
-):
-    category = get_category_by_id(db, category_id)
-
-    base_url = str(request.base_url).rstrip("/")
-    image_url = f"{base_url}/image/{category.image}" if category.image else None
-
-    return CategoryOut(
-        category_id=category.category_id,
-        name=category.name,
-        image=image_url,
-    )

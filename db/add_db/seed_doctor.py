@@ -12,15 +12,15 @@ from models.doctor import Doctor
 DOCTORS_PER_CATEGORY = 20
 
 # doctor_6.png is a female doctor's photo — reserve it for female names only
-FEMALE_IMAGE = "image/doctor/doctor_6.png"
+FEMALE_IMAGE = "doctor/doctor_6.png"
 
 MALE_IMAGES = [
-    "image/doctor/doctor_1.png",
-    "image/doctor/doctor_2.png",
-    "image/doctor/doctor_3.png",
-    "image/doctor/doctor_4.png",
-    "image/doctor/doctor_5.png",
-    "image/doctor/doctor_7.png",
+    "doctor/doctor_1.png",
+    "doctor/doctor_2.png",
+    "doctor/doctor_3.png",
+    "doctor/doctor_4.png",
+    "doctor/doctor_5.png",
+    "doctor/doctor_7.png",
 ]
 
 MALE_NAMES = [

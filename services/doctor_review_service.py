@@ -40,21 +40,6 @@ def get_doctor_reviews(db: Session, doctor_id: int) -> list[DoctorReview]:
     return db.query(DoctorReview).filter(DoctorReview.doctor_id == doctor_id).all()
 
 
-def get_doctor_rating_summary(db: Session, doctor_id: int) -> dict:
-    get_doctor_by_id(db, doctor_id)
-
-    average = (
-        db.query(func.avg(DoctorReview.rating))
-        .filter(DoctorReview.doctor_id == doctor_id)
-        .scalar()
-    )
-
-    return {
-        "doctor_id": doctor_id,
-        "average_rating": round(average, 2) if average is not None else 0.0,
-    }
-
-
 def _update_doctor_average_rating(db: Session, doctor_id: int) -> None:
     average = (
         db.query(func.avg(DoctorReview.rating))

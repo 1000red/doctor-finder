@@ -5,7 +5,7 @@ venv/
 .venv/
 
 # Google OAuth
-client_id.json
+client_secret.json
 
 # Python
 __pycache__/

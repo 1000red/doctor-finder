@@ -11,7 +11,7 @@ router = APIRouter(prefix="/doctors", tags=["Doctors"])
 
 def _build_doctor_out(doctor: Doctor, base_url: str) -> DoctorOut:
     return DoctorOut(
-        doctor_id=doctor.doctor_id,
+ doctor_id=doctor.doctor_id,
         name=doctor.name,
         image=f"{base_url}/image/{doctor.image}" if doctor.image else None,
         work_place=doctor.work_place,
@@ -20,7 +20,9 @@ def _build_doctor_out(doctor: Doctor, base_url: str) -> DoctorOut:
         price=doctor.price,
         average_rating=doctor.average_rating,
         is_active=doctor.is_active,
-        category_id=doctor.category_id,
+        category_name=doctor.category.name if doctor.category else None,
+        working_hours=doctor.working_hours,
+        availability=doctor.availability,
     )
 
 

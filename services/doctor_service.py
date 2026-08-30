@@ -37,7 +37,7 @@ def search_doctors(db: Session, query: str) -> list[Doctor]:
     return (
         db.query(Doctor)
         .filter(
-            Doctor.full_name.ilike(f"%{q}%"),
+            Doctor.name.ilike(f"%{q}%"),
             Doctor.is_active == True
         )
         .limit(20)
