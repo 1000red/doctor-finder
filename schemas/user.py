@@ -19,8 +19,8 @@ class UserOut(BaseModel):
     user_id: int
     full_name: str
     email: EmailStr
-    phone: str
-    gender: Literal["male", "female"]
+    phone: Optional[str] = None
+    gender: Optional[Literal["male", "female"]] = None
     model_config = {"from_attributes": True}
 
 
