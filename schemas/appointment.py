@@ -12,6 +12,7 @@ class AppointmentCreate(BaseModel):
     appointment_date: date
     start_time: str
     end_time: str
+    payment_intent_id: str
 
     @field_validator("start_time", "end_time")
     @classmethod

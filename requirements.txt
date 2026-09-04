@@ -18,5 +18,6 @@ pydantic-settings>=2.3.4
 # Database Driver
 psycopg2-binary>=2.9.9
 
-# HTTP
+# HTTP / Payments
 requests>=2.32.0
+stripe

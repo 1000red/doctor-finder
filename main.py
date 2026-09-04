@@ -11,7 +11,7 @@ from core.config import settings
 
 # Import all models so SQLAlchemy registers them before create_all
 from models import  doctor, doctor_favorite, category  # noqa: F401, E402
-from routers import appointments, auth, users, category, doctor, doctor_favorite
+from routers import appointments, auth, users, category, doctor, doctor_favorite, payment  # noqa: F401, E402
 
 
 @asynccontextmanager
@@ -59,6 +59,7 @@ app.include_router(appointments.router)
 app.include_router(category.router)
 app.include_router(doctor.router)
 app.include_router(doctor_favorite.router)
+app.include_router(payment.router)
 
 # Health Check Routes
 @app.get("/", tags=["Health"])

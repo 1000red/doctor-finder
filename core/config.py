@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
-
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "Doctor Finder"
@@ -28,6 +27,8 @@ class Settings(BaseSettings):
     OTP_EXPIRE_MINUTES: int = 10
 
     GOOGLE_CLIENT_ID: str
+
+    STRIPE_SECRET_KEY: str
 
     class Config:
         env_file = ".env"

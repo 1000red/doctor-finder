@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
+import stripe
 from fastapi import HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from core.config import settings
 
 from models.doctor import Doctor
 from models.appointment import Appointment
@@ -10,6 +13,8 @@ from schemas.appointment import AppointmentCreate
 from services.doctor_service import get_doctor_by_id
 
 MAX_USERS_PER_SLOT = 3
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Appointment:
@@ -53,7 +58,6 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
             detail="This time slot is not available",
         )
 
-    # One appointment per user, per doctor, per day
     existing_appointment = (
         db.query(Appointment)
         .filter(
@@ -70,7 +74,6 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
             detail="You already have an appointment with this doctor on this day",
         )
 
-    # Maximum 3 users per slot
     booked_count = (
         db.query(Appointment)
         .filter(
@@ -88,25 +91,75 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
             detail="This appointment is fully booked",
         )
 
+    _verify_payment_intent(db, user_id, data)
+
     appointment = Appointment(
         user_id=user_id,
         doctor_id=data.doctor_id,
         appointment_date=data.appointment_date,
         start_time=data.start_time,
         end_time=data.end_time,
+        payment_intent_id=data.payment_intent_id,
         created_at=datetime.now(timezone.utc),
     )
 
     db.add(appointment)
 
-    # If this booking fills the slot, mark it unavailable
     if booked_count + 1 >= MAX_USERS_PER_SLOT:
         availability.is_available = False
 
-    db.commit()
-    db.refresh(appointment)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This payment has already been used for another appointment",
+        )
 
+    db.refresh(appointment)
     return appointment
+
+
+def _verify_payment_intent(db: Session, user_id: int, data: AppointmentCreate) -> None:
+    already_used = (
+        db.query(Appointment)
+        .filter(Appointment.payment_intent_id == data.payment_intent_id)
+        .first()
+    )
+    if already_used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This payment has already been used for another appointment",
+        )
+
+    try:
+        intent = stripe.PaymentIntent.retrieve(data.payment_intent_id)
+    except stripe.error.InvalidRequestError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid payment reference",
+        )
+
+    if intent.status != "succeeded":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment has not been completed",
+        )
+
+    metadata = intent.metadata.to_dict() if intent.metadata else {}
+
+    if metadata.get("user_id") != str(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This payment does not belong to you",
+        )
+
+    if metadata.get("doctor_id") != str(data.doctor_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This payment does not match the selected doctor",
+        )
 
 
 def get_user_appointments(db: Session, user_id: int) -> list[dict]:
@@ -145,9 +198,24 @@ def cancel_appointment(db: Session, user_id: int, appointment_id: int) -> None:
     if not appointment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found")
 
+    try:
+        stripe.Refund.create(
+            payment_intent=appointment.payment_intent_id,
+            idempotency_key=f"refund_{appointment.payment_intent_id}",
+        )
+    except stripe.error.InvalidRequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Refund failed: {e.user_message or 'invalid payment reference'}",
+        )
+    except stripe.error.StripeError:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not process refund at this time. Please try again shortly.",
+        )
+
     db.delete(appointment)
 
-    # Re-open the slot since a spot just freed up.
     availability = (
         db.query(DoctorAvailability)
         .filter(

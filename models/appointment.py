@@ -12,6 +12,7 @@ class Appointment(Base):
     appointment_date = Column(Date, nullable=False)
     start_time = Column(String(5), nullable=False)
     end_time = Column(String(5), nullable=False)
+    payment_intent_id = Column(String(255), nullable=False, unique=True, index=True)  # جديد
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     user = relationship("User", back_populates="appointments")
