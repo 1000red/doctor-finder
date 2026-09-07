@@ -1,10 +1,12 @@
 import re
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel, field_validator
 
 TIME_PATTERN = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
+
+AppointmentStatus = Literal["confirmed", "cancelled"]
 
 
 class AppointmentCreate(BaseModel):
@@ -36,6 +38,7 @@ class AppointmentOut(BaseModel):
     appointment_date: date
     start_time: str
     end_time: str
+    status: AppointmentStatus
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -48,6 +51,7 @@ class UserAppointmentOut(BaseModel):
     appointment_date: date
     start_time: str
     end_time: str
+    status: AppointmentStatus
     created_at: datetime
 
     model_config = {"from_attributes": True}

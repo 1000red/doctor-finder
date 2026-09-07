@@ -13,6 +13,7 @@ class User(Base):
     password = Column(String(255), nullable=True)
     phone = Column(String(20), nullable=True)
     gender = Column(String(20), nullable=True)
+    stripe_customer_id = Column(String(255), nullable=True, unique=True)   # <-- جديد
     is_deleted = Column(Boolean, default=False)
     deleted_at = Column(DateTime, nullable=True)
 

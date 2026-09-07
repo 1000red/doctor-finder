@@ -16,10 +16,6 @@ def book_appointment(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    """Book a doctor's exact date and time slot.
-
-    A slot can contain at most three different user bookings.
-    """
     return create_appointment(db=db, user_id=user_id, data=data)
 
 

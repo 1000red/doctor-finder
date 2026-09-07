@@ -22,7 +22,7 @@ def create_payment_intent(db: Session, current_user: User, doctor_id: int):
 
     amount_cents = int(doctor.price * 100)
 
-    customer_id = getattr(current_user, "stripe_customer_id", None)
+    customer_id = current_user.stripe_customer_id
 
     if not customer_id:
         customer = stripe.Customer.create(
@@ -31,6 +31,12 @@ def create_payment_intent(db: Session, current_user: User, doctor_id: int):
             metadata={"user_id": str(current_user.user_id)},
         )
         customer_id = customer["id"]
+
+        # نحفظ الـ customer_id في الداتابيز عشان منعملش customer جديد كل مرة
+        current_user.stripe_customer_id = customer_id
+        db.add(current_user)
+        db.commit()
+        db.refresh(current_user)
 
     ephemeral_key = stripe.EphemeralKey.create(
         customer=customer_id,
@@ -42,6 +48,7 @@ def create_payment_intent(db: Session, current_user: User, doctor_id: int):
         currency="usd",
         customer=customer_id,
         automatic_payment_methods={"enabled": True},
+        setup_future_usage="off_session", 
         metadata={
             "user_id": str(current_user.user_id),
             "doctor_id": str(doctor_id),

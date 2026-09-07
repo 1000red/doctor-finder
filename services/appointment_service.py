@@ -24,7 +24,7 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
             detail="Appointments cannot be booked in the past",
         )
 
-    get_doctor_by_id(db, data.doctor_id)
+    doctor = get_doctor_by_id(db, data.doctor_id)
 
     slot_key = (
         f"appointment:{data.doctor_id}:"
@@ -33,10 +33,7 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
     )
 
     db.execute(
-        text(
-            "SELECT pg_advisory_xact_lock("
-            "hashtextextended(:slot_key, 0))"
-        ),
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:slot_key, 0))"),
         {"slot_key": slot_key},
     )
 
@@ -64,6 +61,7 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
             Appointment.user_id == user_id,
             Appointment.doctor_id == data.doctor_id,
             Appointment.appointment_date == data.appointment_date,
+            Appointment.status == "confirmed",
         )
         .first()
     )
@@ -81,6 +79,7 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
             Appointment.appointment_date == data.appointment_date,
             Appointment.start_time == data.start_time,
             Appointment.end_time == data.end_time,
+            Appointment.status == "confirmed",
         )
         .count()
     )
@@ -91,7 +90,7 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
             detail="This appointment is fully booked",
         )
 
-    _verify_payment_intent(db, user_id, data)
+    _verify_payment_intent(db, user_id, doctor, data)
 
     appointment = Appointment(
         user_id=user_id,
@@ -100,6 +99,7 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
         start_time=data.start_time,
         end_time=data.end_time,
         payment_intent_id=data.payment_intent_id,
+        status="confirmed",
         created_at=datetime.now(timezone.utc),
     )
 
@@ -121,7 +121,7 @@ def create_appointment(db: Session, user_id: int, data: AppointmentCreate) -> Ap
     return appointment
 
 
-def _verify_payment_intent(db: Session, user_id: int, data: AppointmentCreate) -> None:
+def _verify_payment_intent(db: Session, user_id: int, doctor: Doctor, data: AppointmentCreate) -> None:
     already_used = (
         db.query(Appointment)
         .filter(Appointment.payment_intent_id == data.payment_intent_id)
@@ -161,6 +161,11 @@ def _verify_payment_intent(db: Session, user_id: int, data: AppointmentCreate) -
             detail="This payment does not match the selected doctor",
         )
 
+    if intent.amount != int(doctor.price * 100):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment amount does not match doctor price",
+        )
 
 def get_user_appointments(db: Session, user_id: int) -> list[dict]:
     results = (
@@ -179,6 +184,7 @@ def get_user_appointments(db: Session, user_id: int) -> list[dict]:
             "appointment_date": appointment.appointment_date,
             "start_time": appointment.start_time,
             "end_time": appointment.end_time,
+            "status": appointment.status,
             "created_at": appointment.created_at,
         }
         for appointment, doctor_name in results
@@ -198,6 +204,12 @@ def cancel_appointment(db: Session, user_id: int, appointment_id: int) -> None:
     if not appointment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Appointment not found")
 
+    if appointment.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This appointment is already cancelled",
+        )
+
     try:
         stripe.Refund.create(
             payment_intent=appointment.payment_intent_id,
@@ -214,7 +226,7 @@ def cancel_appointment(db: Session, user_id: int, appointment_id: int) -> None:
             detail="Could not process refund at this time. Please try again shortly.",
         )
 
-    db.delete(appointment)
+    appointment.status = "cancelled"
 
     availability = (
         db.query(DoctorAvailability)
