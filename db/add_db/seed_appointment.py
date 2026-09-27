@@ -1,13 +1,3 @@
-"""
-Seed script to populate doctor_availability with time slots from each
-doctor's recurring weekly working-hours schedule.
-
-Safe to re-run: skips (doctor_id, date, start_time, end_time)
-combinations that already exist.
-
-Run with: python3 -m db.add_db.add_appointment
-"""
-
 from datetime import date, datetime, timedelta
 
 from db.database import SessionLocal

@@ -1,10 +1,3 @@
-"""Add a default weekly schedule for doctors without working hours.
-
-Existing schedules are never changed, so this is safe to run more than once.
-
-Run with: python3 -m db.add_db.add_working_hours
-"""
-
 from db.database import SessionLocal
 from models.doctor import Doctor
 from models.doctor_working_hours import DoctorWorkingHours
@@ -28,8 +21,6 @@ def seed_missing_working_hours() -> None:
                 .filter(DoctorWorkingHours.doctor_id == doctor.doctor_id)
                 .all()
             }
-            # A doctor with any configured day may intentionally be off on the
-            # remaining days, so never fill a partial schedule automatically.
             if configured_days:
                 continue
 

@@ -1,11 +1,3 @@
-"""
-Seed script to populate doctor_reviews with random ratings,
-then recalculate each doctor's average_rating.
-If no users exist, fake users are created first.
-
-Run with: python -m db.add_db.add_reviews
-"""
-
 from datetime import datetime, timezone
 import random
 

@@ -1,13 +1,3 @@
-"""
-Seed script to populate doctor_availability with time slots
-for each doctor over the next N days.
-
-Safe to re-run: skips (doctor_id, date, start_time, end_time)
-combinations that already exist.
-
-Run with: python -m db.add_db.add_availability
-"""
-
 import random
 from datetime import date, datetime, timedelta
 
@@ -19,7 +9,7 @@ DAYS_AHEAD = 14
 SLOT_DURATION_MINUTES = 30
 WORK_START_HOUR = 9
 WORK_END_HOUR = 17
-CHANCE_DAY_OFF = 0.15  # احتمال إن اليوم يبقى إجازة للدكتور
+CHANCE_DAY_OFF = 0.15  
 
 
 def generate_time_slots() -> list[tuple[str, str]]:
@@ -53,7 +43,7 @@ def seed_availability():
                 current_date = today + timedelta(days=day_offset)
 
                 if random.random() < CHANCE_DAY_OFF:
-                    continue  # يوم إجازة للدكتور
+                    continue 
 
                 existing_slots = {
                     (a.start_time, a.end_time)

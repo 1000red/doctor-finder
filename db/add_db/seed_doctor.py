@@ -1,8 +1,3 @@
-"""
-Seed script to populate the doctors table with ~20 doctors per category.
-Run with: python seed_doctors.py
-"""
-
 import random
 
 from db.database import SessionLocal
@@ -72,7 +67,6 @@ def build_doctor_name(base_name: str, category_name: str) -> str:
 
 
 def get_random_doctor(used_names: set) -> tuple[str, str]:
-    """Return (name, image_path), avoiding name repetition."""
     is_female = random.random() < 0.2
 
     names_pool = FEMALE_NAMES if is_female else MALE_NAMES
